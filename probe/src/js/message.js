@@ -18,8 +18,9 @@ function Receiver(name, remote){
 
 var messageClient = function () {
   var receivers = [];
-  return {
-    sendMessage:function(dest, message){
+  var messagePeer = {
+    sendMessage:function(message){
+      var dest = message.to;
       console.log('sending '+JSON.stringify(message)+' to '+dest);
       var receiver = this.getReceiver(dest);
       receiver.forward(message);
@@ -43,18 +44,20 @@ var messageClient = function () {
       return localReceivers;
     }
   };
+  return messagePeer;
 }();
 
-function Heartbeat(interval, heartbeatID) {
+function Heartbeat(interval, heartbeatID, destination) {
   this.interval = 1000;
   if(interval) {
     this.interval = interval;
   }
   this.heartbeatID = heartbeatID;
+  this.destination = destination;
 }
 
 Heartbeat.prototype.beat = function() {
-  messageClient.sendMessage('heartbeat',{type:'heartbeat', time:new Date().getTime(), from:this.heartbeatID});
+  messageClient.sendMessage({type:'heartbeat', time:new Date().getTime(), to:this.destination, from:this.heartbeatID});
 }
 
 Heartbeat.prototype.stop = function() {
