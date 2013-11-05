@@ -46,22 +46,49 @@ function getActorsListener(messagePeer, endpointName) {
 
   // hook in things from the DOM
   var awaitingResponses = [];
-  window.origPostMessage = window.postMessage;
-  window.postMessage = function(message, targetOrigin, transfer){
-    var pMsg = {
-      to:endpointName,
-      type:'interceptPostMessage',
-      from:'TODO: we need a from',
-      target:'someTarget',
-      data:message,
-      messageId:zapGuidGen()
-    };
-    messagePeer.sendMessage(pMsg);
-    awaitingResponses[pMsg.messageId] = function(response){
-      window.origPostMessage(response.data, targetOrigin, transfer);
-    };
-    // TODO: setTimeout for no response
+
+  function hookWindow(win) {
+    win.origPostMessage = win.postMessage;
+    win.postMessage = function(message, targetOrigin, transfer){
+      var pMsg = {
+        to:endpointName,
+        type:'interceptPostMessage',
+        from:'TODO: we need a from',
+        target:'someTarget',
+        data:message,
+        messageId:zapGuidGen()
+      };
+      messagePeer.sendMessage(pMsg);
+      awaitingResponses[pMsg.messageId] = function(response){
+        win.origPostMessage(response.data, targetOrigin, transfer);
+      };
+      // TODO: setTimeout for no response
+    }
   }
+
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      console.log(mutation.type);
+      var forEach = Array.prototype.forEach;
+
+      forEach.call(mutation.addedNodes, function(node){
+        if(node.contentWindow && node.contentWindow.postMessage) {
+          console.log("MODIFY TEH "+node.nodeName+"!!!");
+          hookWindow(node.contentWindow);
+        }
+      });
+    });
+  });
+
+  hookWindow(window);
+
+  // configuration of the observer:
+  var config = { attributes: true, childList: true, characterData: true, subtree: true };
+
+  // pass in the target node, as well as the observer options
+  observer.observe(document, config);
+
+
 
   /*
    * The actual listener that's returned for adding to a receiver.
