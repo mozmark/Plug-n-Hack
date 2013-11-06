@@ -4,6 +4,13 @@ function Probe(url, id) {
   // TODO: create the transport name from a GUID or something (perhaps the
   // injector can get something sensible).
   this.transportName = id;
+  this.receiver = messageClient.getReceiver(this.transportName);
+
+  this.getEndpointName = function(){
+    return this.endpointName;
+  }
+
+  this.receiver.addListener(getActorsListener(messageClient, this.getEndpointName.bind(this)));
   // TODO: wrap with promise pixie dust
   var xhr = new XMLHttpRequest();
   xhr.open("GET", url, true);
@@ -27,7 +34,6 @@ Probe.prototype.configure = function(manifest) {
     this.endpointName = probeSection.endpointName;
 
     // find a suitable transport
-    this.receiver = messageClient.getReceiver(this.transportName);
     this.transport = new transports[probeSection.transport](this.transportName,
         this.receiver, probeSection);
 
@@ -43,6 +49,5 @@ Probe.prototype.configure = function(manifest) {
     this.heartbeat = new Heartbeat(1000, this.transportName, this.endpointName);
     this.heartbeat.start();
 
-    this.receiver.addListener(getActorsListener(messageClient, this.endpointName));
   }
 }

@@ -2,7 +2,7 @@
  * Makes a listener that directs messages to the appropriate actor based on
  * the message type.
  */
-function getActorsListener(messagePeer, endpointName) {
+function getActorsListener(messagePeer, getEndpointName) {
   // TODO: replace with something that actually makes something globally
   // unique
   function zapS4() {
@@ -51,7 +51,7 @@ function getActorsListener(messagePeer, endpointName) {
     win.origPostMessage = win.postMessage;
     win.postMessage = function(message, targetOrigin, transfer){
       var pMsg = {
-        to:endpointName,
+        to:getEndpointName(),
         type:'interceptPostMessage',
         from:'TODO: we need a from',
         target:'someTarget',
