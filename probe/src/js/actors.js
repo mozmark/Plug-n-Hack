@@ -60,7 +60,11 @@ function getActorsListener(messagePeer, endpointName) {
       };
       messagePeer.sendMessage(pMsg);
       awaitingResponses[pMsg.messageId] = function(response){
-        win.origPostMessage(response.data, targetOrigin, transfer);
+        if(transfer) {
+          win.origPostMessage(response.data, targetOrigin, transfer);
+        } else {
+          win.origPostMessage(response.data, targetOrigin);
+        }
       };
       // TODO: setTimeout for no response
     }
