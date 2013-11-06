@@ -48,25 +48,30 @@ function getActorsListener(messagePeer, getEndpointName) {
   var awaitingResponses = [];
 
   function hookWindow(win) {
-    win.origPostMessage = win.postMessage;
-    win.postMessage = function(message, targetOrigin, transfer){
-      var pMsg = {
-        to:getEndpointName(),
-        type:'interceptPostMessage',
-        from:'TODO: we need a from',
-        target:'someTarget',
-        data:message,
-        messageId:zapGuidGen()
-      };
-      messagePeer.sendMessage(pMsg);
-      awaitingResponses[pMsg.messageId] = function(response){
-        if(transfer) {
-          win.origPostMessage(response.data, targetOrigin, transfer);
-        } else {
-          win.origPostMessage(response.data, targetOrigin);
-        }
-      };
-      // TODO: setTimeout for no response
+    if(!win.postMessage.isPnHProbe){
+      win.origPostMessage = win.postMessage;
+      win.postMessage = function(message, targetOrigin, transfer){
+        var pMsg = {
+          to:getEndpointName(),
+          type:'interceptPostMessage',
+          from:'TODO: we need a from',
+          target:'someTarget',
+          data:message,
+          messageId:zapGuidGen()
+        };
+        messagePeer.sendMessage(pMsg);
+        awaitingResponses[pMsg.messageId] = function(response){
+          if(transfer) {
+            win.origPostMessage(response.data, targetOrigin, transfer);
+          } else {
+            win.origPostMessage(response.data, targetOrigin);
+          }
+        };
+        // TODO: setTimeout for no response
+      }
+      win.postMessage.isPnHProbe = true;
+    } else {
+      console.log('pnh hook postMessage hook already in place');
     }
   }
 
