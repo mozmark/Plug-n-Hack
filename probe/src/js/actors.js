@@ -51,43 +51,58 @@ function getActorsListener(messagePeer, getEndpointName) {
 
   function hookWindow(win) {
     if(!win.postMessage.isPnHProbe){
-      var endpointId = zapGuidGen();
-      endpoints[endpointId] = function(response) {
-        win.origPostMessage(response.data, '*');
+      try{
+        var endpointId = zapGuidGen();
+        win.origPostMessage = win.postMessage;
+        endpoints[endpointId] = function(response) {
+          win.origPostMessage(response.data, '*');
+        }
+        win.postMessage = function(message, targetOrigin, transfer){
+          var pMsg = {
+            to:getEndpointName(),
+            type:'interceptPostMessage',
+            from:'TODO: we need a from',
+            target:'someTarget',
+            data:message,
+            messageId:zapGuidGen(),
+            endpointId:endpointId
+          };
+          messagePeer.sendMessage(pMsg);
+          awaitingResponses[pMsg.messageId] = function(response){
+            if(transfer) {
+              //win.origPostMessage(response.data, targetOrigin, transfer);
+              win.origPostMessage(response.data, '*', transfer);
+            } else {
+              //win.origPostMessage(response.data, targetOrigin);
+              win.origPostMessage(response.data, '*');
+            }
+          };
+          // TODO: setTimeout for no response
+        }
+        win.postMessage.isPnHProbe = true;
+        console.log('hooked');
+        return true;
+      } catch (e) {
+        console.log('conventional hook failed');
+        return false;
       }
-      win.origPostMessage = win.postMessage;
-      win.postMessage = function(message, targetOrigin, transfer){
-        var pMsg = {
-          to:getEndpointName(),
-          type:'interceptPostMessage',
-          from:'TODO: we need a from',
-          target:'someTarget',
-          data:message,
-          messageId:zapGuidGen(),
-          endpointId:endpointId
-        };
-        messagePeer.sendMessage(pMsg);
-        awaitingResponses[pMsg.messageId] = function(response){
-          if(transfer) {
-            win.origPostMessage(response.data, targetOrigin, transfer);
-          } else {
-            win.origPostMessage(response.data, targetOrigin);
-          }
-        };
-        // TODO: setTimeout for no response
-      }
-      win.postMessage.isPnHProbe = true;
     } else {
+      return true;
       console.log('pnh hook postMessage hook already in place');
     }
   }
 
   var observer = new MutationObserver(function(mutations) {
     function hookNode(node) {
-      console.log(node);
       if(node.contentWindow && node.contentWindow.postMessage) {
-        console.log("MODIFY TEH "+node.nodeName+"!!!");
-        hookWindow(node.contentWindow);
+        node.addEventListener('load', function() {
+          console.log("MODIFY TEH "+node.nodeName+"!!!");
+          if(!hookWindow(node.contentWindow)) {
+            makeProxyFrame(node);
+            hookWindow(node.contentWindow);
+            console.log('tried alternative postMessage hook');
+          }
+        }, false);
       }
       forEach.call(node.childNodes, function(child){
         hookNode(child);
@@ -95,8 +110,6 @@ function getActorsListener(messagePeer, getEndpointName) {
     };
 
     mutations.forEach(function(mutation) {
-      console.log(mutation.type);
-
       forEach.call(mutation.addedNodes, function(node){
         hookNode(node);
       });
@@ -110,8 +123,6 @@ function getActorsListener(messagePeer, getEndpointName) {
 
   // pass in the target node, as well as the observer options
   observer.observe(document, config);
-
-
 
   /*
    * The actual listener that's returned for adding to a receiver.
@@ -127,14 +138,12 @@ function getActorsListener(messagePeer, getEndpointName) {
             var handleFunc = awaitingResponses[message.responseTo];
             delete awaitingResponses[message.responseTo];
             handleFunc(message);
-          }
-          else {
-            console.log('not awaiting a response for message '+message.responseTo);
-          }
-        }
-        if(message.endpointId) {
-          if(endpoints[message.endpointId]){
-            endpoints[message.endpointId](message);
+          } else {
+            if(endpoints[message.responseTo]){
+              endpoints[message.responseTo](message);
+            } else {
+              console.log('not awaiting a response for message '+message.responseTo);
+            }
           }
         }
       }

@@ -1,7 +1,13 @@
 ''' A dumb build script to combine the files for pnh_probe.js '''
 import os
 
-files = ['actors.js', 'message.js', 'transports.js', 'probe.js']
+files = [
+          'proxyframe.js',
+          'actors.js',
+          'message.js',
+          'transports.js',
+          'probe.js'
+          ];
 
 #ensure dist exists
 try:
