@@ -21,7 +21,6 @@ var messageClient = function () {
   var messagePeer = {
     sendMessage:function(message){
       var dest = message.to;
-      console.log('sending '+JSON.stringify(message)+' to '+dest);
       var receiver = this.getReceiver(dest);
       receiver.forward(message);
     },

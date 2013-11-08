@@ -15,7 +15,6 @@ HTTPMessageTransport.prototype.makeURL = function(message) {
 HTTPMessageTransport.prototype.send = function(message) {
   var xhr = new XMLHttpRequest();
   var URL = this.makeURL(message);
- console.log('sending to '+URL);
   xhr.open("GET", URL, true);
   xhr.onload = function(aEvt){
     if (xhr.readyState == 4) {

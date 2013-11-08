@@ -46,9 +46,15 @@ function getActorsListener(messagePeer, getEndpointName) {
 
   // hook in things from the DOM
   var awaitingResponses = [];
+  var endpoints = [];
+  var forEach = Array.prototype.forEach;
 
   function hookWindow(win) {
     if(!win.postMessage.isPnHProbe){
+      var endpointID = zapGuidGen();
+      endpoints[endpointID] = function(response) {
+        win.origPostMessage(response.data, '*');
+      }
       win.origPostMessage = win.postMessage;
       win.postMessage = function(message, targetOrigin, transfer){
         var pMsg = {
@@ -57,7 +63,8 @@ function getActorsListener(messagePeer, getEndpointName) {
           from:'TODO: we need a from',
           target:'someTarget',
           data:message,
-          messageId:zapGuidGen()
+          messageId:zapGuidGen(),
+          endpointId:endpointId
         };
         messagePeer.sendMessage(pMsg);
         awaitingResponses[pMsg.messageId] = function(response){
@@ -76,15 +83,22 @@ function getActorsListener(messagePeer, getEndpointName) {
   }
 
   var observer = new MutationObserver(function(mutations) {
+    function hookNode(node) {
+      console.log(node);
+      if(node.contentWindow && node.contentWindow.postMessage) {
+        console.log("MODIFY TEH "+node.nodeName+"!!!");
+        hookWindow(node.contentWindow);
+      }
+      forEach.call(node.childNodes, function(child){
+        hookNode(child);
+      });
+    };
+
     mutations.forEach(function(mutation) {
       console.log(mutation.type);
-      var forEach = Array.prototype.forEach;
 
       forEach.call(mutation.addedNodes, function(node){
-        if(node.contentWindow && node.contentWindow.postMessage) {
-          console.log("MODIFY TEH "+node.nodeName+"!!!");
-          hookWindow(node.contentWindow);
-        }
+        hookNode(node);
       });
     });
   });
@@ -116,6 +130,11 @@ function getActorsListener(messagePeer, getEndpointName) {
           }
           else {
             console.log('not awaiting a response for message '+message.responseTo);
+          }
+          if(message.endpointId) {
+            if(endpoints[message.endpointId]){
+              endpoints[message.endpointId](message);
+            }
           }
         } else {
           console.log('no actor could be found for messages of type: '
