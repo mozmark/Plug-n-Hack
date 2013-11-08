@@ -51,8 +51,8 @@ function getActorsListener(messagePeer, getEndpointName) {
 
   function hookWindow(win) {
     if(!win.postMessage.isPnHProbe){
-      var endpointID = zapGuidGen();
-      endpoints[endpointID] = function(response) {
+      var endpointId = zapGuidGen();
+      endpoints[endpointId] = function(response) {
         win.origPostMessage(response.data, '*');
       }
       win.origPostMessage = win.postMessage;
@@ -131,14 +131,11 @@ function getActorsListener(messagePeer, getEndpointName) {
           else {
             console.log('not awaiting a response for message '+message.responseTo);
           }
-          if(message.endpointId) {
-            if(endpoints[message.endpointId]){
-              endpoints[message.endpointId](message);
-            }
+        }
+        if(message.endpointId) {
+          if(endpoints[message.endpointId]){
+            endpoints[message.endpointId](message);
           }
-        } else {
-          console.log('no actor could be found for messages of type: '
-              +message.type);
         }
       }
     } else {
