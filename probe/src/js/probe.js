@@ -49,5 +49,19 @@ Probe.prototype.configure = function(manifest) {
     this.heartbeat = new Heartbeat(1000, this.transportName, this.endpointName);
     this.heartbeat.start();
 
+    // make XSS oracle
+    if(probeSection.oracle) {
+      window.xss = function(arg) {
+        var child = document.createElement('img');
+        function cleanup(){
+          console.log('cleaning up');
+          document.body.removeChild(child);
+        }
+        child.src = probeSection.oracle+arg;
+        child.addEventListener('load',cleanup,false);
+        child.addEventListener('error',cleanup,false);
+        document.body.appendChild(child);
+      };
+    }
   }
 }

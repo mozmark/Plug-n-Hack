@@ -45,6 +45,7 @@ function getActorsListener(messagePeer, getEndpointName) {
   };
 
   // hook in things from the DOM
+  // postMessage Proxy stuff
   var awaitingResponses = [];
   var endpoints = [];
   var forEach = Array.prototype.forEach;
