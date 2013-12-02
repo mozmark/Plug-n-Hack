@@ -93,6 +93,32 @@ function getActorsListener(messagePeer, getEndpointName) {
     }
   }
 
+  function makeProxy(fn, pre, post) {
+    if(fn.isPnHProbeProxy) return fn;
+    console.log('make proxy... '+fn);
+    newFn = function(){
+      var newArgs = pre(this,arguments);
+      var ret = fn.apply(this, newArgs);
+      return post ? post(ret) : ret;
+    }
+    newFn.isPnHProbeProxy = true;
+    return newFn;
+  }
+
+  function addEventListenerProxy(obj, args) {
+    var type = args[0];
+    var onEventProxy = makeProxy(args[1], function() {
+      //TODO: replace with an actual implementation
+      console.log('a '+type+' event happened!');
+      return arguments;
+    });
+    return[args[0], onEventProxy, args[2]];
+  }
+
+  function proxyAddEventListener(node) {
+    node.addEventListener = makeProxy(node.addEventListener, addEventListenerProxy);
+  }
+
   var observer = new MutationObserver(function(mutations) {
     function hookNode(node) {
       if(node.contentWindow && node.contentWindow.postMessage) {
@@ -104,6 +130,9 @@ function getActorsListener(messagePeer, getEndpointName) {
             console.log('tried alternative postMessage hook');
           }
         }, false);
+      }
+      if(node.addEventListener) {
+        // TODO: maybe actually check it's a function
       }
       forEach.call(node.childNodes, function(child){
         hookNode(child);
@@ -136,14 +165,16 @@ function getActorsListener(messagePeer, getEndpointName) {
         // if we're awaiting a response with this ID, call the handler
         if(message.responseTo) {
           if(awaitingResponses[message.responseTo]){
+            console.log('awaiting response: '+message.responseTo+' - handling');
             var handleFunc = awaitingResponses[message.responseTo];
             delete awaitingResponses[message.responseTo];
             handleFunc(message);
           } else {
             if(endpoints[message.responseTo]){
+              console.log('known endpoint: '+message.responseTo+' - handling');
               endpoints[message.responseTo](message);
             } else {
-              console.log('not awaiting a response for message '+message.responseTo);
+              console.log('no endpoint or awaited response for message '+message.responseTo);
             }
           }
         }
