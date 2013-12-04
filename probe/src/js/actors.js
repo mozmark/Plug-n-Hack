@@ -97,7 +97,7 @@ function getActorsListener(messagePeer, getEndpointName) {
     if(fn.isPnHProbeProxy) return fn;
     console.log('make proxy... '+fn);
     newFn = function(){
-      var newArgs = pre(this,arguments);
+      var newArgs = pre ? pre(this,arguments) : arguments;
       var ret = fn.apply(this, newArgs);
       return post ? post(ret) : ret;
     }
@@ -109,7 +109,20 @@ function getActorsListener(messagePeer, getEndpointName) {
     var type = args[0];
     var onEventProxy = makeProxy(args[1], function() {
       //TODO: replace with an actual implementation
-      console.log('a '+type+' event happened!');
+      var evt = arguments[1];
+      var endpointId = zapGuidGen();
+      var message = 'a '+type+' event happened!';
+      var pMsg = {
+        to:getEndpointName(),
+        type:'eventInfoMessage',
+        from:'TODO: we need a from',
+        target:'someTarget',
+        data:message,
+        evt:evt,
+        messageId:zapGuidGen(),
+        endpointId:endpointId
+      };
+      messagePeer.sendMessage(pMsg);
       return arguments;
     });
     return[args[0], onEventProxy, args[2]];
@@ -131,9 +144,6 @@ function getActorsListener(messagePeer, getEndpointName) {
           }
         }, false);
       }
-      if(node.addEventListener) {
-        // TODO: maybe actually check it's a function
-      }
       forEach.call(node.childNodes, function(child){
         hookNode(child);
       });
@@ -146,13 +156,15 @@ function getActorsListener(messagePeer, getEndpointName) {
     });
   });
 
-  hookWindow(window);
-
   // configuration of the observer:
   var config = { attributes: true, childList: true, characterData: true, subtree: true };
 
   // pass in the target node, as well as the observer options
   observer.observe(document, config);
+
+  hookWindow(window);
+  proxyAddEventListener(window);
+  proxyAddEventListener(Node.prototype);
 
   /*
    * The actual listener that's returned for adding to a receiver.
