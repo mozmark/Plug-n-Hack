@@ -4,7 +4,7 @@
  */
 function getActorsListener(messagePeer, getEndpointName) {
   // TODO: replace with something that actually makes something globally
-  // unique
+  // unique (this is what ZAP uses currently)
   function zapS4() {
     return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
   }
@@ -109,7 +109,7 @@ function getActorsListener(messagePeer, getEndpointName) {
     var type = args[0];
     var onEventProxy = makeProxy(args[1], function() {
       //TODO: replace with an actual implementation
-      var evt = arguments[1];
+      var evt = arguments[1][0];
       var endpointId = zapGuidGen();
       var message = 'a '+type+' event happened!';
       var pMsg = {
@@ -123,7 +123,7 @@ function getActorsListener(messagePeer, getEndpointName) {
         endpointId:endpointId
       };
       messagePeer.sendMessage(pMsg);
-      return arguments;
+      return arguments[1];
     });
     return[args[0], onEventProxy, args[2]];
   }
