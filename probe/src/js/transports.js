@@ -8,7 +8,7 @@ function HTTPMessageTransport(name, receiver, config) {
 HTTPMessageTransport.prototype.makeURL = function(message) {
   var unencoded = JSON.stringify(message);
   var encoded = encodeURI ? encodeURI(unencoded) : escape(unencoded);
-  var URL = this.config.endpoint+"?message="+encoded+'&id='+this.name;
+  var URL = this.config.endpoint+"message="+encoded+'&id='+this.name;
   return URL;
 }
 
