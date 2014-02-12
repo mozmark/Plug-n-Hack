@@ -2,7 +2,7 @@
  * Makes a listener that directs messages to the appropriate actor based on
  * the message type.
  */
-function getActorsListener(messagePeer, getEndpointName) {
+function getActorsListener(messagePeer, clientConfig) {
   // TODO: replace with something that actually makes something globally
   // unique (this is what ZAP uses currently)
   function zapS4() {
@@ -41,6 +41,13 @@ function getActorsListener(messagePeer, getEndpointName) {
         // submit the form
         form.submit();
       }
+    },
+
+    'setConfig' : function(message) {
+      var name = message.name;
+      var value = message.value;
+      clientConfig[name] = value;
+      // TODO: notify things that are interested in config changes
     }
   };
 
@@ -59,26 +66,40 @@ function getActorsListener(messagePeer, getEndpointName) {
           win.origPostMessage(response.data, '*');
         }
         win.postMessage = function(message, targetOrigin, transfer){
-          var pMsg = {
-            to:getEndpointName(),
-            type:'interceptPostMessage',
-            from:'TODO: we need a from',
-            target:'someTarget',
-            data:message,
-            messageId:zapGuidGen(),
-            endpointId:endpointId
-          };
-          messagePeer.sendMessage(pMsg);
-          awaitingResponses[pMsg.messageId] = function(response){
-            if(transfer) {
-              //win.origPostMessage(response.data, targetOrigin, transfer);
-              win.origPostMessage(response.data, '*', transfer);
-            } else {
-              //win.origPostMessage(response.data, targetOrigin);
-              win.origPostMessage(response.data, '*');
+          console.log('client config is ...');
+          console.log(clientConfig);
+          if(clientConfig.monitorPostMessage || clientConfig.interceptPostMessage) {
+            var messageId = zapGuidGen();
+            if(clientConfig.interceptPostMessage){
+              awaitingResponses[messageId] = function(response){
+                if(transfer) {
+                  //win.origPostMessage(response.data, targetOrigin, transfer);
+                  win.origPostMessage(response.data, '*', transfer);
+                } else {
+                  //win.origPostMessage(response.data, targetOrigin);
+                  win.origPostMessage(response.data, '*');
+                }
+              };
+              // TODO: setTimeout for no response to clear handlers awaiting
+              // dropped responses
             }
-          };
-          // TODO: setTimeout for no response
+            var pMsg = {
+              to:clientConfig.endpointName,
+              type:'interceptPostMessage',
+              from:'TODO: we need a from',
+              target:'someTarget',
+              data:message,
+              intercept: clientConfig.interceptPostMessage ? true: false,
+              messageId:messageId,
+              endpointId:endpointId
+            };
+            messagePeer.sendMessage(pMsg);
+          } else {
+            if(!clientConfig.interceptPostMessage) {
+              console.log('intercept postMessage is off: firing directly');
+              win.origPostMessage(message, targetOrigin, transfer);
+            }
+          }
         }
         win.postMessage.isPnHProbe = true;
         console.log('hooked');
@@ -113,7 +134,7 @@ function getActorsListener(messagePeer, getEndpointName) {
       var endpointId = zapGuidGen();
       var message = 'a '+type+' event happened!';
       var pMsg = {
-        to:getEndpointName(),
+        to:clientConfig.endpointName,
         type:'eventInfoMessage',
         from:'TODO: we need a from',
         target:'someTarget',
