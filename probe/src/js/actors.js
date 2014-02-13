@@ -48,6 +48,7 @@ function getActorsListener(messagePeer, clientConfig) {
       var value = message.value;
       clientConfig[name] = value;
       // TODO: notify things that are interested in config changes
+      clientConfig.notifyListeners();
     }
   };
 
@@ -66,17 +67,14 @@ function getActorsListener(messagePeer, clientConfig) {
           win.origPostMessage(response.data, '*');
         }
         win.postMessage = function(message, targetOrigin, transfer){
-          console.log('client config is ...');
-          console.log(clientConfig);
           if(clientConfig.monitorPostMessage || clientConfig.interceptPostMessage) {
             var messageId = zapGuidGen();
             if(clientConfig.interceptPostMessage){
               awaitingResponses[messageId] = function(response){
+                // TODO: Tighten up target origin here if we can
                 if(transfer) {
-                  //win.origPostMessage(response.data, targetOrigin, transfer);
                   win.origPostMessage(response.data, '*', transfer);
                 } else {
-                  //win.origPostMessage(response.data, targetOrigin);
                   win.origPostMessage(response.data, '*');
                 }
               };
@@ -94,10 +92,12 @@ function getActorsListener(messagePeer, clientConfig) {
               endpointId:endpointId
             };
             messagePeer.sendMessage(pMsg);
-          } else {
-            if(!clientConfig.interceptPostMessage) {
-              console.log('intercept postMessage is off: firing directly');
+          }
+          if(!clientConfig.interceptPostMessage) {
+            if(transfer) {
               win.origPostMessage(message, targetOrigin, transfer);
+            } else {
+              win.origPostMessage(message, targetOrigin);
             }
           }
         }
