@@ -102,21 +102,21 @@ function getActorsListener(messagePeer, clientConfig) {
           }
         }
         win.postMessage.isPnHProbe = true;
-        console.log('hooked');
+        //console.log('hooked');
         return true;
       } catch (e) {
-        console.log('conventional hook failed');
+        //console.log('conventional hook failed');
         return false;
       }
     } else {
       return true;
-      console.log('pnh hook postMessage hook already in place');
+      //console.log('pnh hook postMessage hook already in place');
     }
   }
 
   function makeProxy(fn, pre, post) {
     if(fn.isPnHProbeProxy) return fn;
-    console.log('make proxy... '+fn);
+    //console.log('make proxy... '+fn);
     newFn = function(){
       var callInfo = pre ? pre(this, arguments) : arguments;
       var ret;
@@ -134,7 +134,7 @@ function getActorsListener(messagePeer, clientConfig) {
   function addEventListenerProxy(obj, args) {
     var type = args[0];
     var endpointId = zapGuidGen();
-    console.log("hooking "+endpointId+" for events that are "+type);
+    //console.log("hooking "+endpointId+" for events that are "+type);
     endpoints[endpointId] = function (response) {
       args[1](response.evt);
     };
@@ -144,7 +144,6 @@ function getActorsListener(messagePeer, clientConfig) {
       //TODO: replace with an actual implementation
       if(clientConfig.monitorEvents || clientConfig.interceptEvents) {
         var evt = arguments[1][0];
-        var endpointId = endpointId;
         var message = 'a '+type+' event happened!';
         // TODO: do a better job of marshalling events to the PnH provider
         var pMsg = {
@@ -180,11 +179,11 @@ function getActorsListener(messagePeer, clientConfig) {
     function hookNode(node) {
       if(node.contentWindow && node.contentWindow.postMessage) {
         node.addEventListener('load', function() {
-          console.log("MODIFY TEH "+node.nodeName+"!!!");
+          //console.log("MODIFY TEH "+node.nodeName+"!!!");
           if(!hookWindow(node.contentWindow)) {
             makeProxyFrame(node);
             hookWindow(node.contentWindow);
-            console.log('tried alternative postMessage hook');
+            //console.log('tried alternative postMessage hook');
           }
         }, false);
       }
@@ -221,13 +220,11 @@ function getActorsListener(messagePeer, clientConfig) {
         // if we're awaiting a response with this ID, call the handler
         if(message.responseTo) {
           if(awaitingResponses[message.responseTo]){
-            console.log('awaiting response: '+message.responseTo+' - handling');
             var handleFunc = awaitingResponses[message.responseTo];
             delete awaitingResponses[message.responseTo];
             handleFunc(message);
           } else {
             if(endpoints[message.responseTo]){
-              console.log('known endpoint: '+message.responseTo+' - handling');
               endpoints[message.responseTo](message);
             } else {
               console.log('no endpoint or awaited response for message '+message.responseTo);
