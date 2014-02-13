@@ -130,11 +130,12 @@ function getActorsListener(messagePeer, clientConfig) {
     var type = args[0];
     var onEventProxy = makeProxy(args[1], function() {
       //TODO: replace with an actual implementation
-      var evt = arguments[1][0];
-      var endpointId = zapGuidGen();
-      var message = 'a '+type+' event happened!';
-      var pMsg = {
-        to:clientConfig.endpointName,
+      if(clientConfig.monitorEvents || clientConfig.interceptEvents) {
+        var evt = arguments[1][0];
+        var endpointId = zapGuidGen();
+        var message = 'a '+type+' event happened!';
+        var pMsg = {
+          to:clientConfig.endpointName,
         type:'eventInfoMessage',
         from:'TODO: we need a from',
         target:'someTarget',
@@ -142,8 +143,9 @@ function getActorsListener(messagePeer, clientConfig) {
         evt:evt,
         messageId:zapGuidGen(),
         endpointId:endpointId
-      };
-      messagePeer.sendMessage(pMsg);
+        };
+        messagePeer.sendMessage(pMsg);
+      }
       return arguments[1];
     });
     return[args[0], onEventProxy, args[2]];
