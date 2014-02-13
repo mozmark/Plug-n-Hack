@@ -118,9 +118,14 @@ function getActorsListener(messagePeer, clientConfig) {
     if(fn.isPnHProbeProxy) return fn;
     console.log('make proxy... '+fn);
     newFn = function(){
-      var newArgs = pre ? pre(this,arguments) : arguments;
-      var ret = fn.apply(this, newArgs);
-      return post ? post(ret) : ret;
+      var callInfo = pre ? pre(this, arguments) : arguments;
+      var ret;
+      if(callInfo.modify) {
+        ret = callInfo.modify(this, fn, callInfo.args);
+      } else {
+        ret = fn.apply(this, callInfo.args);
+      }
+        return post ? post(ret) : ret;
     }
     newFn.isPnHProbeProxy = true;
     return newFn;
@@ -128,12 +133,20 @@ function getActorsListener(messagePeer, clientConfig) {
 
   function addEventListenerProxy(obj, args) {
     var type = args[0];
+    var endpointId = zapGuidGen();
+    console.log("hooking "+endpointId+" for events that are "+type);
+    endpoints[endpointId] = function (response) {
+      args[1](response.evt);
+    };
     var onEventProxy = makeProxy(args[1], function() {
+      var messageId = zapGuidGen();
+      var callInfo = {};
       //TODO: replace with an actual implementation
       if(clientConfig.monitorEvents || clientConfig.interceptEvents) {
         var evt = arguments[1][0];
-        var endpointId = zapGuidGen();
+        var endpointId = endpointId;
         var message = 'a '+type+' event happened!';
+        // TODO: do a better job of marshalling events to the PnH provider
         var pMsg = {
           to:clientConfig.endpointName,
         type:'eventInfoMessage',
@@ -141,14 +154,22 @@ function getActorsListener(messagePeer, clientConfig) {
         target:'someTarget',
         data:message,
         evt:evt,
-        messageId:zapGuidGen(),
+        messageId:messageId,
         endpointId:endpointId
         };
         messagePeer.sendMessage(pMsg);
       }
-      return arguments[1];
+      callInfo.args = arguments[1];
+      if(clientConfig.interceptEvents) {
+        callInfo.modify = function(obj, fn, args) {
+          awaitingResponses[messageId] = function () {
+            fn.apply(obj, args);
+          };
+        };
+      }
+      return callInfo;
     });
-    return[args[0], onEventProxy, args[2]];
+    return {'args':[args[0], onEventProxy, args[2]]};
   }
 
   function proxyAddEventListener(node) {
