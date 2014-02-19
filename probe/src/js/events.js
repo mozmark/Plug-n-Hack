@@ -57,6 +57,14 @@ EventUtils = {
     var evt = document.createEvent('Events');
     evt.initEvent(eventData.type, true, false);
     // TODO: Copy attrs
+    for(key in eventData) {
+      try {
+        evt[key] = eventData[key];
+      } catch(e) {
+        console.log('oops');
+        console.log(e);
+      }
+    }
     return evt;
   }
 }

@@ -136,7 +136,9 @@ function getActorsListener(messagePeer, clientConfig) {
     var endpointId = zapGuidGen();
     //console.log("hooking "+endpointId+" for events that are "+type);
     endpoints[endpointId] = function (response) {
-      args[1](response.evt);
+      var evt = EventUtils.synthesizeEvent(response.eventData);
+      // TODO: if originalTargetPath is set, dispatch event there
+      args[1](evt);
     };
     var onEventProxy = makeProxy(args[1], function() {
       var messageId = zapGuidGen();
@@ -148,13 +150,14 @@ function getActorsListener(messagePeer, clientConfig) {
         // TODO: do a better job of marshalling events to the PnH provider
         var pMsg = {
           to:clientConfig.endpointName,
-        type:'eventInfoMessage',
-        from:'TODO: we need a from',
-        target:'someTarget',
-        data:message,
-        evt:evt,
-        messageId:messageId,
-        endpointId:endpointId
+          type:'eventInfoMessage',
+          from:'TODO: we need a from',
+          target:'someTarget',
+          data:message,
+          eventData:EventUtils.makeEventJSON(evt),
+          originalTargetPath:EventUtils.findPath(evt.originalTarget),
+          messageId:messageId,
+          endpointId:endpointId
         };
         messagePeer.sendMessage(pMsg);
       }
