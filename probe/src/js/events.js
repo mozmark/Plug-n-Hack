@@ -40,5 +40,24 @@ EventUtils = {
       }
     }
     return element;
+  },
+  makeEventJSON:function(evt) {
+    var obj = {};
+    for(key in evt) {
+      var value = evt[key];
+      var type = typeof value;
+      // we don't do object or array attrs yet
+      if('string' === type || 'number' === type || 'boolean' === type) {
+        obj[key] = value;
+      }
+    }
+    return JSON.stringify(obj);
+  },
+  synthesizeEvent:function(eventData) {
+    var evt = document.createEvent('Events');
+    evt.initEvent(eventData.type, true, false);
+    // TODO: Copy attrs
+    return evt;
   }
 }
+

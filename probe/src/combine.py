@@ -2,6 +2,7 @@
 import os
 
 files = [
+          'events.js',
           'proxyframe.js',
           'actors.js',
           'message.js',
