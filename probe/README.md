@@ -11,3 +11,6 @@ To run this, simply cd to the probe/src directory and do this:
 ```
 python combine.py
 ```
+
+License is the BSD License - just because I found myself using bits of
+Firebug (which is under the BSD License).
