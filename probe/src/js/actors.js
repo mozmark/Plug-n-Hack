@@ -155,7 +155,7 @@ function getActorsListener(messagePeer, clientConfig) {
           target:'someTarget',
           data:message,
           eventData:EventUtils.makeEventJSON(evt),
-          originalTargetPath:EventUtils.findPath(evt.originalTarget),
+          originalTargetPath:EventUtils.findPathFromEvent(evt),
           messageId:messageId,
           endpointId:endpointId
         };
