@@ -58,6 +58,7 @@ function getActorsListener(messagePeer, clientConfig) {
   var endpoints = [];
   var forEach = Array.prototype.forEach;
   var recentEvents = [];
+  var lastClearout = Date.now();
 
   function hookWindow(win) {
     if(!win.postMessage.isPnHProbe){
@@ -163,6 +164,16 @@ function getActorsListener(messagePeer, clientConfig) {
         };
         recentEvents.push(evt);
         messagePeer.sendMessage(pMsg);
+        // clear out recent events - every second ish
+        if(lastClearout + 1000 < Date.now()) {
+          for(var idx in recentEvents) {
+            var recent = recentEvents[idx];
+            if(recent && (recent.timeStamp + 1000 < evt.timeStamp)){
+              delete recentEvents[idx];
+            }
+          }
+          lastClearout = Date.now();
+        }
       }
       callInfo.args = arguments[1];
       if(clientConfig.interceptEvents) {
