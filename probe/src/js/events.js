@@ -1,6 +1,6 @@
-EventUtils = {
+var EventUtils = {
   findNodeIndex:function(node, parent) {
-    for(i=0; i< parent.childNodes.length; i++) {
+    for(var i=0; i< parent.childNodes.length; i++) {
       if(node === parent.childNodes[i]) {
         return i;
       }
@@ -26,9 +26,11 @@ EventUtils = {
   },
   findPathFromEvent:function(evt) {
     try {
-      return this.findPath(evt.originalTarget);
+      //return this.findPath(evt.originalTarget);
+      return this.getElementXPath(evt.originalTarget);
     } catch (e) {
-      return this.findPath(evt.target);
+      //return this.findPath(evt.target);
+      return this.getElementXPath(evt.target);
     }
   },
    /**
@@ -71,7 +73,7 @@ EventUtils = {
   },
   elementFromPath:function(path) {
     var element;
-    for(idx in path) {
+    for(var idx in path) {
       if(!element) {
         if('string' === typeof path[idx]) {
           // we've got a node with an id, start the path with that
@@ -88,7 +90,7 @@ EventUtils = {
   },
   makeEventJSON:function(evt) {
     var obj = {};
-    for(key in evt) {
+    for(var key in evt) {
       var value = evt[key];
       var type = typeof value;
       // we don't do object or array attrs yet
@@ -102,7 +104,7 @@ EventUtils = {
     var evt = document.createEvent('Events');
     evt.initEvent(eventData.type, true, false);
     // TODO: Copy attrs
-    for(key in eventData) {
+    for(var key in eventData) {
       try {
         evt[key] = eventData[key];
       } catch(e) {

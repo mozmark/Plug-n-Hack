@@ -26,7 +26,7 @@ function Probe(url, id) {
       }
      },
      'notifyListeners':function() {
-        for(listener in this.listeners) {
+        for(var listener in this.listeners) {
             this.listeners[listener](this);
         }
      }
@@ -56,7 +56,7 @@ Probe.prototype.configure = function(manifest) {
     this.endpointName = probeSection.endpointName;
 
     // copy probe section items to the config
-    for(configItem in probeSection) {
+    for(var configItem in probeSection) {
       this.config[configItem] = probeSection[configItem];
     }
 

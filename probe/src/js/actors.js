@@ -117,7 +117,7 @@ function getActorsListener(messagePeer, clientConfig) {
   function makeProxy(fn, pre, post) {
     if(fn.isPnHProbeProxy) return fn;
     //console.log('make proxy... '+fn);
-    newFn = function(){
+    var newFn = function(){
       var callInfo = pre ? pre(this, arguments) : arguments;
       var ret;
       if(callInfo.modify) {

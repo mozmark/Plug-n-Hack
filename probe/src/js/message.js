@@ -9,7 +9,7 @@ function Receiver(name, remote){
   };
 
   this.forward = function(message) {
-    for(i in this.listeners){
+    for(var i in this.listeners){
       var listener = this.listeners[i];
       listener(message);
     }
