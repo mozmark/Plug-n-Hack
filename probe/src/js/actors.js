@@ -57,6 +57,7 @@ function getActorsListener(messagePeer, clientConfig) {
   var awaitingResponses = [];
   var endpoints = [];
   var forEach = Array.prototype.forEach;
+  var recentEvents = [];
 
   function hookWindow(win) {
     if(!win.postMessage.isPnHProbe){
@@ -157,8 +158,10 @@ function getActorsListener(messagePeer, clientConfig) {
           eventData:EventUtils.makeEventJSON(evt),
           originalTargetPath:EventUtils.findPathFromEvent(evt),
           messageId:messageId,
-          endpointId:endpointId
+          endpointId:endpointId,
+          seenBefore:(recentEvents.indexOf(evt) >= 0)
         };
+        recentEvents.push(evt);
         messagePeer.sendMessage(pMsg);
       }
       callInfo.args = arguments[1];
