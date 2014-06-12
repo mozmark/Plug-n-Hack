@@ -133,6 +133,8 @@ function getActorsListener(messagePeer, clientConfig) {
     return newFn;
   }
 
+  var listenerMap = {};
+
   function addEventListenerProxy(obj, args) {
     var type = args[0];
     var endpointId = zapGuidGen();
@@ -185,11 +187,19 @@ function getActorsListener(messagePeer, clientConfig) {
       }
       return callInfo;
     });
+    listenerMap[args[1]] = onEventProxy;
     return {'args':[args[0], onEventProxy, args[2]]};
+  }
+
+  function removeEventListenerProxy(obj, args) {
+    // if it's proxied, remove the proxy, otherwise the original
+    var listener = listenerMap[args[1]] ? listenerMap[args[1]] : args[1];
+    return {args:[args[0], listener, args[2]]};
   }
 
   function proxyAddEventListener(node) {
     node.addEventListener = makeProxy(node.addEventListener, addEventListenerProxy);
+    node.removeEventListener = makeProxy(node.removeEventListener, removeEventListenerProxy);
   }
 
   var observer = new MutationObserver(function(mutations) {
@@ -225,6 +235,61 @@ function getActorsListener(messagePeer, clientConfig) {
   hookWindow(window);
   proxyAddEventListener(window);
   proxyAddEventListener(Node.prototype);
+
+  // listener for the recorder - initially just do nothing and allow the
+  // addEventListenerProxy send the messages for us (no reason not to).
+  var recorderListener = function(evt) {
+    // Do nothing; we just want to provoke the probe into sending a message
+  };
+
+  // TODO: Perhaps we want the tool to specify what events are interesting?
+  var evtTypes = ['click','keypress'];
+  var recording = false;
+
+  // function for ensuring the relevant recorder eventListeners are added or
+  // removed according to config
+  var setupRecorders = function(conf) {
+    if(conf.recordEvents) {
+      if(!recording) {
+        for(var evtType of evtTypes) {
+          window.addEventListener(evtType, recorderListener, true);
+        }
+        recording = true;
+      }
+    } else {
+      if (recording) {
+        for(var evtType of evtTypes) {
+          window.removeEventListener(evtType, recorderListener, false);
+        }
+        recording = false;
+      }
+    }
+  };
+
+  // ensure recording stuff is done
+  clientConfig.addConfigChangedListener(function(newConfig) {
+    setupRecorders(newConfig);
+  });
+
+  setupRecorders(clientConfig);
+
+  function addWindowOpenProxy(obj, args) {
+    console.log('Do window.open stuff here');
+    if(clientConfig.recordEvents) {
+      // grab a new base URL from tool config
+      var baseURL = clientConfig.windowRedirectURL;
+      function replaceURL(url){
+        return baseURL + window.encodeURIComponent(url);
+      }
+      // substitute URL for special tool url.
+      // TODO: Copy other args over
+      return {args:[replaceURL(args[0])]};
+    } else {
+      return {args:args};
+    }
+  }
+
+  window.open = makeProxy(window.open, addWindowOpenProxy);
 
   /*
    * The actual listener that's returned for adding to a receiver.

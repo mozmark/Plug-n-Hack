@@ -14,6 +14,8 @@ function Probe(url, id) {
     'interceptPostMessage': true,
     'interceptEvents': true,
     'listeners': [],
+    //'recordEvents': true,
+    'windowRedirectURL' : 'http://localhost/some/path/',
     'addConfigChangedListener': function(listener) {
       if(-1 == this.listeners.indexOf(listener)) {
         this.listeners.push(listener);
