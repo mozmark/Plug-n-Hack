@@ -133,6 +133,22 @@ function getActorsListener(messagePeer, clientConfig) {
     return newFn;
   }
 
+  var appendAttributes = function(evtType, evt, message){
+    if('submit' === evtType) {
+      message.sync = true;
+      message.probeURL = evt.target.action;
+    }
+    if('click' === evtType) {
+      if (evt.target
+          && evt.target.nodeName
+          && 'A' === evt.target.nodeName) {
+            message.sync = true;
+            message.probeURL = evt.target.href;
+          }
+    }
+    console.log(message);
+  };
+
   var listenerMap = {};
 
   function addEventListenerProxy(obj, args) {
@@ -164,6 +180,7 @@ function getActorsListener(messagePeer, clientConfig) {
           endpointId:endpointId,
           seenBefore:(recentEvents.indexOf(evt) >= 0)
         };
+        appendAttributes(type, evt, pMsg);
         recentEvents.push(evt);
         messagePeer.sendMessage(pMsg);
         // clear out recent events - every second ish
@@ -243,7 +260,7 @@ function getActorsListener(messagePeer, clientConfig) {
   };
 
   // TODO: Perhaps we want the tool to specify what events are interesting?
-  var evtTypes = ['click','keypress'];
+  var evtTypes = ['click','keypress','submit'];
   var recording = false;
 
   // function for ensuring the relevant recorder eventListeners are added or

@@ -13,28 +13,45 @@ HTTPMessageTransport.prototype.makeURL = function(message) {
 }
 
 HTTPMessageTransport.prototype.send = function(message) {
+  var async = true;
   var xhr = new XMLHttpRequest();
   var URL = this.makeURL(message);
-  xhr.open("GET", URL, true);
-  xhr.onload = function(aEvt){
-    if (xhr.readyState == 4) {
-      if(xhr.status == 200) {
-        var messages = JSON.parse(xhr.responseText).messages;
-        for(var idx = 0; idx < messages.length; idx++) {
-          if(this.receiver) {
-            this.receiver.forward(messages[idx]);
+  if(message.sync) {
+    async = false;
+  }
+  xhr.open("GET", URL, async);
+  if(async) {
+    xhr.onload = function(aEvt){
+      if (xhr.readyState == 4) {
+        if(xhr.status == 200) {
+          var messages = JSON.parse(xhr.responseText).messages;
+          for(var idx = 0; idx < messages.length; idx++) {
+            if(this.receiver) {
+              this.receiver.forward(messages[idx]);
+            }
           }
         }
+        else {
+          console.log("Error loading page\n");
+        }
       }
-      else {
-        console.log("Error loading page\n");
+    }.bind(this);
+
+    xhr.onerror = function(e) {
+      console.log(document.location);
+      console.log('Request to transport endpoint failed');
+      console.log(e.target.status);
+    };
+    xhr.send();
+  } else {
+    xhr.send();
+    if(request.status === 200) {
+      var messages = JSON.parse(xhr.responseText).messages;
+      for(var idx = 0; idx < messages.length; idx++) {
+        if(this.receiver) {
+          this.receiver.forward(messages[idx]);
+        }
       }
     }
-  }.bind(this);
-
-  xhr.onerror = function(e) {
-    console.log('Request to transport endpoint failed');
-    console.log(e.target.status);
-  };
-  xhr.send();
+  }
 }
