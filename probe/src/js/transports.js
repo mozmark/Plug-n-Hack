@@ -45,7 +45,7 @@ HTTPMessageTransport.prototype.send = function(message) {
     xhr.send();
   } else {
     xhr.send();
-    if(request.status === 200) {
+    if(xhr.status === 200) {
       var messages = JSON.parse(xhr.responseText).messages;
       for(var idx = 0; idx < messages.length; idx++) {
         if(this.receiver) {

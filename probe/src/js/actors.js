@@ -293,17 +293,19 @@ function getActorsListener(messagePeer, clientConfig) {
   function addWindowOpenProxy(obj, args) {
     console.log('Do window.open stuff here');
     if(clientConfig.recordEvents) {
-      // grab a new base URL from tool config
-      var baseURL = clientConfig.windowRedirectURL;
-      function replaceURL(url){
-        return baseURL + window.encodeURIComponent(url);
-      }
-      // substitute URL for special tool url.
-      // TODO: Copy other args over
-      return {args:[replaceURL(args[0])]};
-    } else {
-      return {args:args};
+      var messageId = zapGuidGen();
+      // send a probeURL message here
+      var pMsg = {
+        to:clientConfig.endpointName,
+        type:'windowOpenMessage',
+        data:'',
+        messageId:messageId,
+        probeURL:args[0],
+        sync:true
+      };
+      messagePeer.sendMessage(pMsg);
     }
+    return {args:args};
   }
 
   window.open = makeProxy(window.open, addWindowOpenProxy);
