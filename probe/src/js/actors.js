@@ -127,7 +127,7 @@ function getActorsListener(messagePeer, clientConfig) {
       } else {
         ret = fn.apply(this, callInfo.args);
       }
-        return post ? post(ret) : ret;
+      return post ? post(ret) : ret;
     }
     newFn.isPnHProbeProxy = true;
     return newFn;
@@ -136,14 +136,18 @@ function getActorsListener(messagePeer, clientConfig) {
   var appendAttributes = function(evtType, evt, message){
     if('submit' === evtType) {
       message.sync = true;
-      message.probeURL = evt.target.action;
+      if(clientConfig.recordEvents) {
+        message.probeURL = evt.target.action;
+      }
     }
     if('click' === evtType) {
       if (evt.target
           && evt.target.nodeName
           && 'A' === evt.target.nodeName) {
             message.sync = true;
-            message.probeURL = evt.target.href;
+            if(clientConfig.recordEvents) {
+              message.probeURL = evt.target.href;
+            }
           }
     }
     console.log(message);
@@ -170,15 +174,15 @@ function getActorsListener(messagePeer, clientConfig) {
         // TODO: do a better job of marshalling events to the PnH provider
         var pMsg = {
           to:clientConfig.endpointName,
-          type:'eventInfoMessage',
-          from:'TODO: we need a from',
-          target:'someTarget',
-          data:message,
-          eventData:EventUtils.makeEventJSON(evt),
-          originalTargetPath:EventUtils.findPathFromEvent(evt),
-          messageId:messageId,
-          endpointId:endpointId,
-          seenBefore:(recentEvents.indexOf(evt) >= 0)
+        type:'eventInfoMessage',
+        from:'TODO: we need a from',
+        target:'someTarget',
+        data:message,
+        eventData:EventUtils.makeEventJSON(evt),
+        originalTargetPath:EventUtils.findPathFromEvent(evt),
+        messageId:messageId,
+        endpointId:endpointId,
+        seenBefore:(recentEvents.indexOf(evt) >= 0)
         };
         appendAttributes(type, evt, pMsg);
         recentEvents.push(evt);
