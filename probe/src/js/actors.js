@@ -141,16 +141,30 @@ function getActorsListener(messagePeer, clientConfig) {
       }
     }
     if('click' === evtType) {
+      var target = evt.target;
       if (evt.target
-          && evt.target.nodeName
-          && 'A' === evt.target.nodeName) {
-            message.sync = true;
-            if(clientConfig.recordEvents) {
-              message.probeURL = evt.target.href;
+          && evt.target.nodeName) {
+            if('A' === evt.target.nodeName) {
+              message.sync = true;
+              if(clientConfig.recordEvents) {
+                message.probeURL = evt.target.href;
+              }
             }
+            if('INPUT' === target.nodeName
+                && target.type
+                && 'submit' === target.type) {
+                  for(var current = target; current.parentNode; current = current.parentNode) {
+                    if('FORM' === current.nodeName) {
+                      if(current.action) {
+                        message.probeURL = current.action;
+                        message.sync = true;
+                        break;
+                      }
+                    }
+                  }
+                }
           }
     }
-    console.log(message);
   };
 
   var listenerMap = {};
@@ -264,7 +278,7 @@ function getActorsListener(messagePeer, clientConfig) {
   };
 
   // TODO: Perhaps we want the tool to specify what events are interesting?
-  var evtTypes = ['click','keypress','submit'];
+  var evtTypes = ['click','keypress'];
   var recording = false;
 
   // function for ensuring the relevant recorder eventListeners are added or
