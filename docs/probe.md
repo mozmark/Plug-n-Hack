@@ -51,6 +51,6 @@ Other configuration options include:
 * **interceptEvents**: (true/false) Similar to the monitor functionality, with the difference that the remote tool can modify the message received to change how the event looks to the receiving EventListener.
 *  **monitorPostMessage**: (true/false) In cases when the receiving window doesn't have a probe set, this can be a way of getting information on postMessages. Only use this if you can't set a probe on the receiving document for whatever reason.
 *  **interceptPostMessage**: (true/false) Similar for monitorPostMessage but for interception and modification.
-*  ** recordEvents**: (true/false) should all click and keypress events be sent to the tool (e.g. for recording)?
+*  **recordEvents**: (true/false) should all click and keypress events be sent to the tool (e.g. for recording)?
 
 Some configuration options can be changed after probe initialization by sending setConfig messages to the client.
