@@ -45,4 +45,12 @@ There are 4 configuration options in this example:
 * **oracle**: the probe contains a simple XSS oracle; this is an URL which should be hit if that oracle is triggered.
 * **endpointName**: this is a name for the tool endpoint - the tool name ('ZAP' in this case) is usually a good choice for this.
 
+Other configuration options include:
+* **heartbeatInterval**: your tool may want a mechanism for knowing whether a probe is still alive. A heartbeat provides a useful mechanism for checking this; if your heartbeat interval is set to 1000 (or, 1 second) and you've not recieved a heartbeat for several seconds, it's a good indicator that your probe is no longer alive.  With the HTTPMessageTransport, this has the nice side-effect of providig a ready-made poll loop. The default value for this option is 1000.
+* **monitorEvents**: (true/false) Set this to true if you wish to receive information on events seen by EventListeners added to the document via AddEventListener. This is a great way of exposing functionality in an application to test.
+* **interceptEvents**: (true/false) Similar to the monitor functionality, with the difference that the remote tool can modify the message received to change how the event looks to the receiving EventListener.
+*  **monitorPostMessage**: (true/false) In cases when the receiving window doesn't have a probe set, this can be a way of getting information on postMessages. Only use this if you can't set a probe on the receiving document for whatever reason.
+*  **interceptPostMessage**: (true/false) Similar for monitorPostMessage but for interception and modification.
+*  ** recordEvents**: (true/false) should all click and keypress events be sent to the tool (e.g. for recording)?
+
 Some configuration options can be changed after probe initialization by sending setConfig messages to the client.
