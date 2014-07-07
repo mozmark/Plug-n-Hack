@@ -12,6 +12,20 @@ Injecting the Probe
 
 The injection can hapeen in a number of different ways (browser bookmarklet, browser addon, injection via MITM proxy) but the probe will work far better if it's able to add mutation observers and event listeners as early as possible. In particular, recording or interception of events may be unreliable (or not work at all) if the event listeners are added to elements before the probe is injected.
 
+Injection involves 2 things:
+* Injecting the probe source
+* Initialising a probe
+
+Initialising a probe looks something like:
+
+``` JavaScript
+var probe = new Probe(
+  'http://localhost:8080/OTHER/pnh/other/manifest/?apikey=',
+  'ZAP_ID-4');
+```
+
+The first parameter there is the URL of the PnH manifest (see below), the second is an ID given to this probe.
+
 Configuration
 ---
 Configuration takes place using a conventional plug-n-hack manifest; the JSON config file is served, as normal, from the tool. A new 'probe' section is added to the configuration file containg the probe configuration options. For example, ZAP serves something that looks something like this:
@@ -79,4 +93,13 @@ There are a number of messages that can be sent by the probe
 Messages Received
 ---
 
-The probe also handles a number of messages.
+The probe also handles a number of messages:
+* **setConfig**: This message sets a configuration option on the probe. Configuration options are described above. The probe expects the message to contain the following:
+  * **name**: (string) the name of the configuration option to set
+  * **value**: the value to set this configuration option to.
+* **setLocation**: This message causes the window containing the probed document to navigate. The probe expects a single item in the message:
+  * **URL**: (string) the URL the window should navigate to.
+* **makeRequest**: This message is similar to setLocation but allows for more request types. It works by injecting a form into the probed document and submitting it. this is useful if, for example, you want to POST some form data to an URL. The probe expects the following in this message:
+  * **URL**: (string) The URL the form should use as its action
+  * **method**: (string) The method the form should use (e.g. GET or POST)
+  * We really ought to allow some form fields to be set too. That hasn't happened yet. Patches welcome!
