@@ -54,3 +54,29 @@ Other configuration options include:
 *  **recordEvents**: (true/false) should all click and keypress events be sent to the tool (e.g. for recording)?
 
 Some configuration options can be changed after probe initialization by sending setConfig messages to the client.
+
+Messages
+---
+
+Probe messages consist of (short) pieces of JSON. An example message might look like this:
+
+``` JSON
+{"type":"heartbeat","time":1404739028607,"to":"ZAP","from":"ZAP_ID-4"}
+```
+
+All probe messages must have the following fields:
+* **type**: information on what kind of message this is. In this case, it's a heartbeat message.
+* **to**: information on where this message is going to. This will correspond to the endpointName configuration option; in this case, it's "ZAP".
+* **from**: information on where this message comes from. This will correspond to the ID the probe was given on creation; in this case, it's "ZAP_ID-4".
+
+Probe messages may have other data. In this case, "time" is incuded.
+
+Messages Sent
+---
+
+There are a number of messages that can be sent by the probe
+
+Messages Received
+---
+
+The probe also handles a number of messages.
