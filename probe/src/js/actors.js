@@ -157,9 +157,11 @@ function getActorsListener(messagePeer, clientConfig) {
                     if('FORM' === current.nodeName) {
                       if(current.action) {
                         message.probeURL = current.action;
-                        message.sync = true;
-                        break;
+                      } else {
+                        message.probeURL = cleanURL(current.baseURI);
                       }
+                      message.sync = true;
+                      break;
                     }
                   }
                 }
