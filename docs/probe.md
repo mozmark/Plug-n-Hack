@@ -83,7 +83,7 @@ All probe messages must have the following fields:
 * **to**: information on where this message is going to. This will correspond to the endpointName configuration option; in this case, it's "ZAP".
 * **from**: information on where this message comes from. This will correspond to the ID the probe was given on creation; in this case, it's "ZAP_ID-4".
 
-Probe messages may have other data. In this case, "time" is incuded.
+Probe messages may have other data. In this case, "time" is included.
 
 Messages Sent
 ---
