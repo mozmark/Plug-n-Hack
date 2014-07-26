@@ -6,42 +6,44 @@ function Probe(url, id, initialConfig) {
   this.transportName = id;
   this.receiver = messageClient.getReceiver(this.transportName);
 
-  config = {
+  this.config = {
     // default is also set in Heartbeat - see message.js
     'heartbeatInterval': 1000,
     'monitorPostMessage': true,
     'monitorEvents': true,
     'interceptPostMessage': true,
     'interceptEvents': true,
-    'windowRedirectURL' : 'http://localhost/some/path/'
+    'listeners': [],
+    //'recordEvents': true,
+    'windowRedirectURL' : 'http://localhost/some/path/',
+    'addConfigChangedListener': function(listener) {
+      if(-1 == this.listeners.indexOf(listener)) {
+        this.listeners.push(listener);
+      }
+    },
+    'removeConfigChangedListener': function(listener) {
+      if(-1 != this.listeners.indexOf(listener)) {
+        console.log('removing');
+        delete this.listeners[this.listeners.indexOf(listener)];
+      }
+     },
+     'notifyListeners':function() {
+        for(var listener in this.listeners) {
+            this.listeners[listener](this);
+        }
+     }
   };
 
-  if(initialConfig) {
-    config = initialConfig;
+  // Copy over initial config - ensure that the functions don't get
+  // clobbered
+  var invalidKeys = ['addConfigChangedListener', 'removeConfigChangedListener', 'notifyListeners'];
+  if (initialConfig) {
+    for (key in initialConfig) {
+      if (! key in invalidKeys) {
+        this.config[key] = initialConfig[key];
+      }
+    }
   }
-
-  config.listeners = [];
-
-  config.addConfigChangedListener =  function(listener) {
-    if(-1 == this.listeners.indexOf(listener)) {
-      this.listeners.push(listener);
-    }
-  };
-
-  config.removeConfigChangedListener = function(listener) {
-    if(-1 != this.listeners.indexOf(listener)) {
-      console.log('removing');
-      delete this.listeners[this.listeners.indexOf(listener)];
-    }
-  };
-
-  config.notifyListeners = function() {
-    for(var listener in this.listeners) {
-      this.listeners[listener](this);
-    }
-  };
-
-  this.config = config;
 
   this.receiver.addListener(getActorsListener(messageClient, this.config));
   // TODO: wrap with promise pixie dust
