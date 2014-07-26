@@ -1,38 +1,47 @@
 const transports = {HTTPMessageTransport:HTTPMessageTransport};
 
-function Probe(url, id) {
+function Probe(url, id, initialConfig) {
   // TODO: create the transport name from a GUID or something (perhaps the
   // injector can get something sensible).
   this.transportName = id;
   this.receiver = messageClient.getReceiver(this.transportName);
 
-  this.config = {
+  config = {
     // default is also set in Heartbeat - see message.js
     'heartbeatInterval': 1000,
     'monitorPostMessage': true,
     'monitorEvents': true,
     'interceptPostMessage': true,
     'interceptEvents': true,
-    'listeners': [],
-    //'recordEvents': true,
-    'windowRedirectURL' : 'http://localhost/some/path/',
-    'addConfigChangedListener': function(listener) {
-      if(-1 == this.listeners.indexOf(listener)) {
-        this.listeners.push(listener);
-      }
-    },
-    'removeConfigChangedListener': function(listener) {
-      if(-1 != this.listeners.indexOf(listener)) {
-        console.log('removing');
-        delete this.listeners[this.listeners.indexOf(listener)];
-      }
-     },
-     'notifyListeners':function() {
-        for(var listener in this.listeners) {
-            this.listeners[listener](this);
-        }
-     }
+    'windowRedirectURL' : 'http://localhost/some/path/'
   };
+
+  if(initialConfig) {
+    config = initialConfig;
+  }
+
+  config.listeners = [];
+
+  config.addConfigChangedListener =  function(listener) {
+    if(-1 == this.listeners.indexOf(listener)) {
+      this.listeners.push(listener);
+    }
+  };
+
+  config.removeConfigChangedListener = function(listener) {
+    if(-1 != this.listeners.indexOf(listener)) {
+      console.log('removing');
+      delete this.listeners[this.listeners.indexOf(listener)];
+    }
+  };
+
+  config.notifyListeners = function() {
+    for(var listener in this.listeners) {
+      this.listeners[listener](this);
+    }
+  };
+
+  this.config = config;
 
   this.receiver.addListener(getActorsListener(messageClient, this.config));
   // TODO: wrap with promise pixie dust
