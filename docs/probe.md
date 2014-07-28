@@ -10,7 +10,7 @@ The Plug-n-Hack probe is a javascript program which can be injected into a docum
 Injecting the Probe
 ---
 
-The injection can hapeen in a number of different ways (browser bookmarklet, browser addon, injection via MITM proxy) but the probe will work far better if it's able to add mutation observers and event listeners as early as possible. In particular, recording or interception of events may be unreliable (or not work at all) if the event listeners are added to elements before the probe is injected.
+The injection can happen in a number of different ways (browser bookmarklet, browser addon, injection via MITM proxy) but the probe will work far better if it's able to add mutation observers and event listeners as early as possible. In particular, recording or interception of events may be unreliable (or not work at all) if the event listeners are added to elements before the probe is injected.
 
 Injection involves 2 things:
 * Injecting the probe source
