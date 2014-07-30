@@ -19,7 +19,7 @@ function getActorsListener(messagePeer, clientConfig) {
      * browser to make a request.
      */
     'setLocation' : function(message) {
-      if(message.URL) {
+      if (message.URL) {
         // navigate to the specified URL
         window.location = message.URL;
       }
@@ -30,7 +30,7 @@ function getActorsListener(messagePeer, clientConfig) {
      * e.g. resending forms for replaying a POST.
      */
     'makeRequest' : function(message) {
-      if(message.URL && message.method) {
+      if (message.URL && message.method) {
         // inject a form into the document
         var form = document.createElement('form');
         form.method = message.method;
@@ -61,7 +61,7 @@ function getActorsListener(messagePeer, clientConfig) {
   var lastClearout = Date.now();
 
   function hookWindow(win) {
-    if(!win.postMessage.isPnHProbe){
+    if (!win.postMessage.isPnHProbe){
       try{
         var endpointId = zapGuidGen();
         win.origPostMessage = win.postMessage;
@@ -69,12 +69,12 @@ function getActorsListener(messagePeer, clientConfig) {
           win.origPostMessage(response.data, '*');
         }
         win.postMessage = function(message, targetOrigin, transfer){
-          if(clientConfig.monitorPostMessage || clientConfig.interceptPostMessage) {
+          if (clientConfig.monitorPostMessage || clientConfig.interceptPostMessage) {
             var messageId = zapGuidGen();
-            if(clientConfig.interceptPostMessage){
+            if (clientConfig.interceptPostMessage){
               awaitingResponses[messageId] = function(response){
                 // TODO: Tighten up target origin here if we can
-                if(transfer) {
+                if (transfer) {
                   win.origPostMessage(response.data, '*', transfer);
                 } else {
                   win.origPostMessage(response.data, '*');
@@ -95,8 +95,8 @@ function getActorsListener(messagePeer, clientConfig) {
             };
             messagePeer.sendMessage(pMsg);
           }
-          if(!clientConfig.interceptPostMessage) {
-            if(transfer) {
+          if (!clientConfig.interceptPostMessage) {
+            if (transfer) {
               win.origPostMessage(message, targetOrigin, transfer);
             } else {
               win.origPostMessage(message, targetOrigin);
@@ -117,12 +117,12 @@ function getActorsListener(messagePeer, clientConfig) {
   }
 
   function makeProxy(fn, pre, post) {
-    if(fn.isPnHProbeProxy) return fn;
+    if (fn.isPnHProbeProxy) return fn;
     //console.log('make proxy... '+fn);
     var newFn = function(){
       var callInfo = pre ? pre(this, arguments) : arguments;
       var ret;
-      if(callInfo.modify) {
+      if (callInfo.modify) {
         ret = callInfo.modify(this, fn, callInfo.args);
       } else {
         ret = fn.apply(this, callInfo.args);
@@ -134,28 +134,28 @@ function getActorsListener(messagePeer, clientConfig) {
   }
 
   var appendAttributes = function(evtType, evt, message){
-    if('submit' === evtType) {
+    if ('submit' === evtType) {
       message.sync = true;
-      if(clientConfig.recordEvents) {
+      if (clientConfig.recordEvents) {
         message.probeURL = evt.target.action;
       }
     }
-    if('click' === evtType) {
+    if ('click' === evtType) {
       var target = evt.target;
       if (evt.target
           && evt.target.nodeName) {
-            if('A' === evt.target.nodeName) {
+            if ('A' === evt.target.nodeName) {
               message.sync = true;
-              if(clientConfig.recordEvents) {
+              if (clientConfig.recordEvents) {
                 message.probeURL = evt.target.href;
               }
             }
-            if('INPUT' === target.nodeName
+            if ('INPUT' === target.nodeName
                 && target.type
                 && 'submit' === target.type) {
-                  for(var current = target; current.parentNode; current = current.parentNode) {
-                    if('FORM' === current.nodeName) {
-                      if(current.action) {
+                  for (var current = target; current.parentNode; current = current.parentNode) {
+                    if ('FORM' === current.nodeName) {
+                      if (current.action) {
                         message.probeURL = current.action;
                       } else {
                         message.probeURL = cleanURL(current.baseURI);
@@ -184,7 +184,7 @@ function getActorsListener(messagePeer, clientConfig) {
       var messageId = zapGuidGen();
       var callInfo = {};
       //TODO: replace with an actual implementation
-      if(clientConfig.monitorEvents || clientConfig.interceptEvents) {
+      if (clientConfig.monitorEvents || clientConfig.interceptEvents) {
         var evt = arguments[1][0];
         var message = 'a '+type+' event happened!';
         // TODO: do a better job of marshalling events to the PnH provider
@@ -204,10 +204,10 @@ function getActorsListener(messagePeer, clientConfig) {
         recentEvents.push(evt);
         messagePeer.sendMessage(pMsg);
         // clear out recent events - every second ish
-        if(lastClearout + 1000 < Date.now()) {
-          for(var idx in recentEvents) {
+        if (lastClearout + 1000 < Date.now()) {
+          for (var idx in recentEvents) {
             var recent = recentEvents[idx];
-            if(recent && (recent.timeStamp + 1000 < evt.timeStamp)){
+            if (recent && (recent.timeStamp + 1000 < evt.timeStamp)){
               delete recentEvents[idx];
             }
           }
@@ -215,7 +215,7 @@ function getActorsListener(messagePeer, clientConfig) {
         }
       }
       callInfo.args = arguments[1];
-      if(clientConfig.interceptEvents) {
+      if (clientConfig.interceptEvents) {
         callInfo.modify = function(obj, fn, args) {
           awaitingResponses[messageId] = function () {
             fn.apply(obj, args);
@@ -241,10 +241,10 @@ function getActorsListener(messagePeer, clientConfig) {
 
   var observer = new MutationObserver(function(mutations) {
     function hookNode(node) {
-      if(node.contentWindow && node.contentWindow.postMessage) {
+      if (node.contentWindow && node.contentWindow.postMessage) {
         node.addEventListener('load', function() {
           //console.log("MODIFY TEH "+node.nodeName+"!!!");
-          if(!hookWindow(node.contentWindow)) {
+          if (!hookWindow(node.contentWindow)) {
             makeProxyFrame(node);
             hookWindow(node.contentWindow);
             //console.log('tried alternative postMessage hook');
@@ -286,16 +286,16 @@ function getActorsListener(messagePeer, clientConfig) {
   // function for ensuring the relevant recorder eventListeners are added or
   // removed according to config
   var setupRecorders = function(conf) {
-    if(conf.recordEvents) {
-      if(!recording) {
-        for(var evtType of evtTypes) {
+    if (conf.recordEvents) {
+      if (!recording) {
+        for (var evtType of evtTypes) {
           window.addEventListener(evtType, recorderListener, true);
         }
         recording = true;
       }
     } else {
       if (recording) {
-        for(var evtType of evtTypes) {
+        for (var evtType of evtTypes) {
           window.removeEventListener(evtType, recorderListener, false);
         }
         recording = false;
@@ -312,7 +312,7 @@ function getActorsListener(messagePeer, clientConfig) {
 
   function addWindowOpenProxy(obj, args) {
     console.log('Do window.open stuff here');
-    if(clientConfig.recordEvents) {
+    if (clientConfig.recordEvents) {
       var messageId = zapGuidGen();
       // send a probeURL message here
       var pMsg = {
@@ -334,18 +334,18 @@ function getActorsListener(messagePeer, clientConfig) {
    * The actual listener that's returned for adding to a receiver.
    */
   return function(message) {
-    if(message && message.type) {
-      if(actors[message.type]) {
+    if (message && message.type) {
+      if (actors[message.type]) {
         actors[message.type](message);
       } else {
         // if we're awaiting a response with this ID, call the handler
-        if(message.responseTo) {
-          if(awaitingResponses[message.responseTo]){
+        if (message.responseTo) {
+          if (awaitingResponses[message.responseTo]){
             var handleFunc = awaitingResponses[message.responseTo];
             delete awaitingResponses[message.responseTo];
             handleFunc(message);
           } else {
-            if(endpoints[message.responseTo]){
+            if (endpoints[message.responseTo]){
               endpoints[message.responseTo](message);
             } else {
               console.log('no endpoint or awaited response for message '+message.responseTo);

@@ -34,75 +34,83 @@ function Probe(url, id, initialConfig) {
      }
   };
 
-  // Copy over initial config - ensure that the functions don't get
-  // clobbered
-  var invalidKeys = ['addConfigChangedListener', 'removeConfigChangedListener', 'notifyListeners'];
-  if (initialConfig) {
-    for (key in initialConfig) {
-      if (! key in invalidKeys) {
-        this.config[key] = initialConfig[key];
+  this.receiver.addListener(getActorsListener(messageClient, this.config));
+
+  var configComplete = function (possibleConfig) {
+    // add config items here if the probe won't work without them
+    var necessaryKeys = ['endpointName', 'endpoint'];
+
+    for (var necessary in necessaryKeys) {
+      if (undefined === possibleConfig[necessary]) {
+        return false;
       }
+    }
+    return true;
+  };
+
+  if (initialConfig && configComplete(initialConfig)) {
+    this.configure(initialConfig);
+  } else {
+    // TODO: wrap with promise pixie dust
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.onload = function(aEvt) {
+      if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+          var json = xhr.responseText;
+          var manifest = JSON.parse(json);
+
+          if (manifest && manifest.features && manifest.features.probe) {
+            var probeSection = manifest.features.probe;
+            this.configure(probeSection);
+          }
+        }
+      }
+    }.bind(this);
+    xhr.send();
+  }
+}
+
+Probe.prototype.configure = function(probeSection) {
+  // get the remote endpoint ID
+  this.endpointName = probeSection.endpointName;
+
+  // copy probe section items to the config, ensure functions are not clobbered
+  var invalidKeys = ['addConfigChangedListener', 'removeConfigChangedListener', 'notifyListeners'];
+  for (var configItem in probeSection) {
+    if (! configItem in invalidKeys) {
+      this.config[configItem] = probeSection[configItem];
     }
   }
 
-  this.receiver.addListener(getActorsListener(messageClient, this.config));
+  // find a suitable transport
+  this.transport = new transports[probeSection.transport](this.transportName,
+      this.receiver, probeSection);
 
-  // TODO: wrap with promise pixie dust
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", url, true);
-  xhr.onload = function(aEvt) {
-    if (xhr.readyState == 4) {
-      if (xhr.status == 200) {
-        var json = xhr.responseText;
-        var manifest = JSON.parse(json);
-        this.configure(manifest);
+  // Wire the transport to receive messages to the remote endpoint
+  var remoteReceiver = messageClient.getReceiver(this.endpointName);
+  remoteReceiver.addListener(function(message){
+    this.transport.send(message);
+  }.bind(this));
+
+  // create a heartbeat
+  // now create the heartbeat
+  // TODO: Configure the heartbeat interval from the manifest
+  this.heartbeat = new Heartbeat(this.transportName, this.endpointName, this.config);
+  this.heartbeat.start();
+
+  // make XSS oracle
+  if (probeSection.oracle) {
+    window.xss = function(arg) {
+      var child = document.createElement('img');
+      function cleanup(){
+        console.log('cleaning up');
+        document.body.removeChild(child);
       }
-    }
-  }.bind(this);
-  xhr.send();
-}
-
-Probe.prototype.configure = function(manifest) {
-  if (manifest && manifest.features && manifest.features.probe) {
-    var probeSection = manifest.features.probe;
-
-    // get the remote endpoint ID
-    this.endpointName = probeSection.endpointName;
-
-    // copy probe section items to the config
-    for (var configItem in probeSection) {
-      this.config[configItem] = probeSection[configItem];
-    }
-
-    // find a suitable transport
-    this.transport = new transports[probeSection.transport](this.transportName,
-        this.receiver, probeSection);
-
-    // Wire the transport to receive messages to the remote endpoint
-    var remoteReceiver = messageClient.getReceiver(this.endpointName);
-    remoteReceiver.addListener(function(message){
-      this.transport.send(message);
-    }.bind(this));
-
-    // create a heartbeat
-    // now create the heartbeat
-    // TODO: Configure the heartbeat interval from the manifest
-    this.heartbeat = new Heartbeat(this.transportName, this.endpointName, this.config);
-    this.heartbeat.start();
-
-    // make XSS oracle
-    if (probeSection.oracle) {
-      window.xss = function(arg) {
-        var child = document.createElement('img');
-        function cleanup(){
-          console.log('cleaning up');
-          document.body.removeChild(child);
-        }
-        child.src = probeSection.oracle+arg;
-        child.addEventListener('load',cleanup,false);
-        child.addEventListener('error',cleanup,false);
-        document.body.appendChild(child);
-      };
-    }
+      child.src = probeSection.oracle+arg;
+      child.addEventListener('load',cleanup,false);
+      child.addEventListener('error',cleanup,false);
+      document.body.appendChild(child);
+    };
   }
 }

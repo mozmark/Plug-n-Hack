@@ -16,17 +16,17 @@ HTTPMessageTransport.prototype.send = function(message) {
   var async = true;
   var xhr = new XMLHttpRequest();
   var URL = this.makeURL(message);
-  if(message.sync) {
+  if (message.sync) {
     async = false;
   }
   xhr.open("GET", URL, async);
-  if(async) {
+  if (async) {
     xhr.onload = function(aEvt){
       if (xhr.readyState == 4) {
-        if(xhr.status == 200) {
+        if (xhr.status == 200) {
           var messages = JSON.parse(xhr.responseText).messages;
-          for(var idx = 0; idx < messages.length; idx++) {
-            if(this.receiver) {
+          for (var idx = 0; idx < messages.length; idx++) {
+            if (this.receiver) {
               this.receiver.forward(messages[idx]);
             }
           }
@@ -45,10 +45,10 @@ HTTPMessageTransport.prototype.send = function(message) {
     xhr.send();
   } else {
     xhr.send();
-    if(xhr.status === 200) {
+    if (xhr.status === 200) {
       var messages = JSON.parse(xhr.responseText).messages;
-      for(var idx = 0; idx < messages.length; idx++) {
-        if(this.receiver) {
+      for (var idx = 0; idx < messages.length; idx++) {
+        if (this.receiver) {
           this.receiver.forward(messages[idx]);
         }
       }

@@ -9,7 +9,7 @@ function Receiver(name, remote){
   };
 
   this.forward = function(message) {
-    for(var i in this.listeners){
+    for (var i in this.listeners){
       var listener = this.listeners[i];
       listener(message);
     }
@@ -26,7 +26,7 @@ var messageClient = function () {
     },
 
     getReceiver:function(name) {
-      if(!receivers[name]) {
+      if (!receivers[name]) {
         receivers[name] = new Receiver(name);
       }
       return receivers[name];
@@ -34,9 +34,9 @@ var messageClient = function () {
 
     getLocalReceivers:function() {
       var localReceivers = [];
-      for(var idx=0; idx < receivers.length; idx++) {
+      for (var idx=0; idx < receivers.length; idx++) {
         var receiver = receivers[idx];
-        if(!receiver.remote) {
+        if (!receiver.remote) {
           localReceivers[localReceivers.length] = receiver;
         }
       }
@@ -61,7 +61,7 @@ function Heartbeat(heartbeatID, destination, config) {
 
 
 Heartbeat.prototype.getHeartbeatInterval = function() {
-  if(this.config && this.config.heartbeatInterval) {
+  if (this.config && this.config.heartbeatInterval) {
     console.log('interval set from config: '+this.config.heartbeatInterval);
     console.log(this.config);
     return this.config.heartbeatInterval;
@@ -75,7 +75,7 @@ Heartbeat.prototype.beat = function() {
 };
 
 Heartbeat.prototype.stop = function() {
-  if(this.handle) {
+  if (this.handle) {
     clearInterval(this.handle);
     this.handle = false;
   }
@@ -83,7 +83,7 @@ Heartbeat.prototype.stop = function() {
 };
 
 Heartbeat.prototype.start = function() {
-  if(this.handle) {
+  if (this.handle) {
     this.stop();
   }
   this.handle = setInterval(this.beat.bind(this), this.getHeartbeatInterval());
