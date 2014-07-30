@@ -17,18 +17,18 @@ function Probe(url, id, initialConfig) {
     //'recordEvents': true,
     'windowRedirectURL' : 'http://localhost/some/path/',
     'addConfigChangedListener': function(listener) {
-      if(-1 == this.listeners.indexOf(listener)) {
+      if (-1 == this.listeners.indexOf(listener)) {
         this.listeners.push(listener);
       }
     },
     'removeConfigChangedListener': function(listener) {
-      if(-1 != this.listeners.indexOf(listener)) {
+      if (-1 != this.listeners.indexOf(listener)) {
         console.log('removing');
         delete this.listeners[this.listeners.indexOf(listener)];
       }
      },
      'notifyListeners':function() {
-        for(var listener in this.listeners) {
+        for (var listener in this.listeners) {
             this.listeners[listener](this);
         }
      }
@@ -46,6 +46,7 @@ function Probe(url, id, initialConfig) {
   }
 
   this.receiver.addListener(getActorsListener(messageClient, this.config));
+
   // TODO: wrap with promise pixie dust
   var xhr = new XMLHttpRequest();
   xhr.open("GET", url, true);
@@ -62,14 +63,14 @@ function Probe(url, id, initialConfig) {
 }
 
 Probe.prototype.configure = function(manifest) {
-  if(manifest && manifest.features && manifest.features.probe) {
+  if (manifest && manifest.features && manifest.features.probe) {
     var probeSection = manifest.features.probe;
 
     // get the remote endpoint ID
     this.endpointName = probeSection.endpointName;
 
     // copy probe section items to the config
-    for(var configItem in probeSection) {
+    for (var configItem in probeSection) {
       this.config[configItem] = probeSection[configItem];
     }
 
@@ -90,7 +91,7 @@ Probe.prototype.configure = function(manifest) {
     this.heartbeat.start();
 
     // make XSS oracle
-    if(probeSection.oracle) {
+    if (probeSection.oracle) {
       window.xss = function(arg) {
         var child = document.createElement('img');
         function cleanup(){
