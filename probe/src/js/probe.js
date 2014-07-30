@@ -34,6 +34,17 @@ function Probe(url, id, initialConfig) {
      }
   };
 
+  // Copy over initial config - ensure that the functions don't get
+  // clobbered
+  var invalidKeys = ['addConfigChangedListener', 'removeConfigChangedListener', 'notifyListeners'];
+  if (initialConfig) {
+    for (key in initialConfig) {
+      if (! key in invalidKeys) {
+        this.config[key] = initialConfig[key];
+      }
+    }
+  }
+
   this.receiver.addListener(getActorsListener(messageClient, this.config));
 
   var configComplete = function (possibleConfig) {
@@ -48,8 +59,8 @@ function Probe(url, id, initialConfig) {
     return true;
   };
 
-  if (initialConfig && configComplete(initialConfig)) {
-    this.configure(initialConfig);
+  if (initialConfig && configComplete(this.config)) {
+    this.configure(this.config);
   } else {
     // TODO: wrap with promise pixie dust
     var xhr = new XMLHttpRequest();
@@ -59,10 +70,8 @@ function Probe(url, id, initialConfig) {
         if (xhr.status == 200) {
           var json = xhr.responseText;
           var manifest = JSON.parse(json);
-
           if (manifest && manifest.features && manifest.features.probe) {
-            var probeSection = manifest.features.probe;
-            this.configure(probeSection);
+            this.configure(manifest.features.probe);
           }
         }
       }
@@ -75,12 +84,9 @@ Probe.prototype.configure = function(probeSection) {
   // get the remote endpoint ID
   this.endpointName = probeSection.endpointName;
 
-  // copy probe section items to the config, ensure functions are not clobbered
-  var invalidKeys = ['addConfigChangedListener', 'removeConfigChangedListener', 'notifyListeners'];
+  // copy probe section items to the config
   for (var configItem in probeSection) {
-    if (! configItem in invalidKeys) {
-      this.config[configItem] = probeSection[configItem];
-    }
+    this.config[configItem] = probeSection[configItem];
   }
 
   // find a suitable transport
