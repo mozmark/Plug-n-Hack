@@ -10,7 +10,7 @@ The Plug-n-Hack probe is a javascript program which can be injected into a docum
 Injecting the Probe
 ---
 
-The injection can hapeen in a number of different ways (browser bookmarklet, browser addon, injection via MITM proxy) but the probe will work far better if it's able to add mutation observers and event listeners as early as possible. In particular, recording or interception of events may be unreliable (or not work at all) if the event listeners are added to elements before the probe is injected.
+The injection can happen in a number of different ways (browser bookmarklet, browser addon, injection via MITM proxy) but the probe will work far better if it's able to add mutation observers and event listeners as early as possible. In particular, recording or interception of events may be unreliable (or not work at all) if the event listeners are added to elements before the probe is injected.
 
 Injection involves 2 things:
 * Injecting the probe source
@@ -83,7 +83,7 @@ All probe messages must have the following fields:
 * **to**: information on where this message is going to. This will correspond to the endpointName configuration option; in this case, it's "ZAP".
 * **from**: information on where this message comes from. This will correspond to the ID the probe was given on creation; in this case, it's "ZAP_ID-4".
 
-Probe messages may have other data. In this case, "time" is incuded.
+Probe messages may have other data. In this case, "time" is included.
 
 Messages Sent
 ---
